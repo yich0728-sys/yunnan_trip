@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>云南之旅</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* ===== 通用全屏页 ===== */
+    .page {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      z-index: 1;
+    }
+    .page.active {
+      opacity: 1;
+      pointer-events: all;
+      z-index: 10;
+    }
+
+    /* ===== 背景图 ===== */
+    .bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: filter 1.4s ease;
+    }
+    .bg-blur { filter: blur(14px) brightness(0.45); }
+    .bg-clear { filter: blur(0px) brightness(0.6); }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      transition: background 1.2s ease;
+    }
+    .overlay-dark {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);
+    }
+    .overlay-info {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.92) 100%);
+    }
+
+    /* ===== 返回按钮 ===== */
+    .back-btn {
+      position: absolute;
+      top: 18px;
+      left: 14px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
+      padding: 8px 16px 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.2s;
+    }
+    .back-btn:active { background: rgba(255,255,255,0.15); }
+
+    /* ===== 昆明页 ===== */
+    #page-kunming { justify-content: flex-end; padding-bottom: 64px; }
+
+    .kunming-intro {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 28px;
+      width: 100%;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .kunming-intro.hidden {
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      position: absolute;
+      bottom: 64px;
+    }
+    .city-badge {
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.45);
+      color: rgba(255,255,255,0.8);
+      font-size: 11px;
+      letter-spacing: 4px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    .city-name {
+      font-size: 58px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 10px;
+      text-shadow: 0 4px 28px rgba(0,0,0,0.6);
+      margin-bottom: 8px;
+    }
+    .city-en {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 8px;
+      margin-bottom: 48px;
+    }
+    .btn-land {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 15px 36px;
+      border-radius: 50px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.25s;
+    }
+    .btn-land:active { background: rgba(255,255,255,0.28); transform: scale(0.96); }
+
+    /* 信息卡区 */
+    .kunming-info {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding: 56px 18px 28px;
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    .kunming-info.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .info-top {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .season-tag {
+      display: inline-block;
+      background: rgba(168,85,247,0.25);
+      border: 1px solid rgba(200,140,255,0.45);
+      color: #d8aaff;
+      font-size: 11px;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .info-heading {
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+      text-shadow: 0 3px 16px rgba(0,0,0,0.5);
+    }
+    .info-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 5px;
+      letter-spacing: 1px;
+    }
+
+    .info-card {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 14px 15px;
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    .info-card.in {
+      animation: cardSlideIn 0.48s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    @keyframes cardSlideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+    .card-ico { font-size: 18px; }
+    .card-ttl { font-size: 14px; font-weight: 700; color: #fff; }
+
+    .card-body {
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.75;
+    }
+    .card-body b { color: #d8aaff; }
+
+    .card-warn { border-color: rgba(245,197,24,0.3); background: rgba(245,197,24,0.09); }
+    .card-warn .card-ttl { color: #f5c518; }
+    .card-warn .card-body b { color: #f5c518; }
+
+    .card-green { border-color: rgba(76,200,110,0.3); background: rgba(76,200,110,0.09); }
+    .card-green .card-ttl { color: #6ee08a; }
+    .card-green .card-body b { color: #6ee08a; }
+
+    .btn-depart {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #a855f7 0%, #6d28d9 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(22px);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-depart.in {
+      animation: cardSlideIn 0.48s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    .btn-depart:active { filter: brightness(0.85); transform: scale(0.97); }
+
+    /* ===== 飞机落地动画页 ===== */
+    #page-landing {
+      background: linear-gradient(180deg, #060e1f 0%, #0f2744 35%, #1d4d80 65%, #6aadcc 100%);
+    }
+    .runway {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 35%;
+      background: linear-gradient(180deg, #283828 0%, #1a2a1a 100%);
+    }
+    .runway::before {
+      content: '';
+      position: absolute;
+      top: 28%; left: 0; right: 0;
+      height: 5px;
+      background: repeating-linear-gradient(
+        90deg, transparent 0, transparent 28px,
+        rgba(255,255,200,0.65) 28px, rgba(255,255,200,0.65) 56px
+      );
+    }
+    .runway-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 7px; height: 65%;
+      background: rgba(255,255,200,0.45);
+      border-radius: 4px;
+    }
+    .mountain-layer {
+      position: absolute;
+      bottom: 35%; left: 0; right: 0;
+      height: 110px;
+      background:
+        radial-gradient(ellipse 200px 95px at 18% 100%, #1a4a1a 0%, transparent 70%),
+        radial-gradient(ellipse 150px 75px at 50% 100%, #2a5a2a 0%, transparent 70%),
+        radial-gradient(ellipse 175px 85px at 82% 100%, #183818 0%, transparent 70%);
+    }
+    .stars { position: absolute; inset: 0; pointer-events: none; }
+    .star { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; }
+
+    #plane {
+      position: absolute;
+      font-size: 54px;
+      left: 50%;
+      top: -90px;
+      transform: translateX(-50%) rotate(-12deg);
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6));
+    }
+    #plane.landing {
+      animation: planeDown 2s cubic-bezier(0.3,0.1,0.2,1) forwards;
+    }
+    @keyframes planeDown {
+      0%   { top: -90px;  transform: translateX(-50%) rotate(-13deg) scale(0.65); }
+      55%  { top: 36%;    transform: translateX(-50%) rotate(-4deg)  scale(1.02); }
+      78%  { top: 41%;    transform: translateX(-50%) rotate(0deg)   scale(1.05); }
+      90%  { top: 43%;    transform: translateX(-50%) rotate(1deg)   scale(1.0); }
+      100% { top: 43%;    transform: translateX(-50%) rotate(0deg)   scale(1.0); }
+    }
+    .land-msg {
+      position: absolute;
+      bottom: 13%; left: 0; right: 0;
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255,255,255,0.88);
+      letter-spacing: 3px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 2.2s forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== 二选一页 ===== */
+    #page-choose {
+      flex-direction: row;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .side {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 64px 0 52px;
+      cursor: pointer;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    .side:first-of-type { border-right: 1px solid rgba(255,255,255,0.18); }
+    .side .bg { transition: transform 0.5s ease; }
+    .side:active .bg { transform: scale(1.05); }
+
+    #page-choose.active .side-dali {
+      animation: slideUp 0.5s ease 0.08s forwards;
+    }
+    #page-choose.active .side-lijiang {
+      animation: slideUp 0.5s ease 0.22s forwards;
+    }
+    #page-choose.active .vs-badge {
+      animation: popIn 0.38s ease 0.36s both;
+    }
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+      to   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    }
+
+    .side-shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.78) 100%);
+      transition: background 0.3s;
+    }
+    .side:active .side-shade {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.86) 100%);
+    }
+
+    .side-inner {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 12px 0;
+      width: 100%;
+      max-width: 92%;
+      margin-top: 54px;
+    }
+    .side-tag {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.32);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .side-name {
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+      text-shadow: 0 3px 14px rgba(0,0,0,0.6);
+      margin-bottom: 10px;
+    }
+    .side-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.5;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+      margin-bottom: 14px;
+    }
+    .spots {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+      text-align: left;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px 12px;
+      backdrop-filter: blur(4px);
+    }
+    .spot {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+      line-height: 1.45;
+    }
+    .spot-emoji {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .spot.hot {
+      color: #ffd66b;
+    }
+    .spot.hot .spot-text {
+      color: #ffd66b;
+    }
+    .spot-text {
+      flex: 1;
+    }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #f5c518;
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+    .side-cta {
+      display: inline-block;
+      background: rgba(255,255,255,0.16);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.42);
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 10px 22px;
+      border-radius: 50px;
+    }
+    .vs-badge {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 20;
+      width: 36px; height: 36px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: rgba(255,255,255,0.82);
+      letter-spacing: 1px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==============================
+       昆明页
+  ============================== -->
+  <div class="page active" id="page-kunming">
+    <div class="bg bg-blur" id="km-bg"
+         style="background-image:url('昆明背景图.jpg'); background-size:cover; background-position:center;"></div>
+    <div class="overlay overlay-dark" id="km-overlay"></div>
+
+    <!-- 初始状态 -->
+    <div class="kunming-intro" id="km-intro">
+      <div class="city-badge">YUNNAN · CHINA</div>
+      <div class="city-name">昆明</div>
+      <div class="city-en">KUNMING</div>
+      <button class="btn-land" onclick="revealKunming()">✈&nbsp; 落地昆明</button>
+    </div>
+
+    <!-- 信息状态 -->
+    <div class="kunming-info" id="km-info">
+
+      <div class="info-top">
+        <div class="season-tag">🌸 五月限定</div>
+        <div class="info-heading">蓝花楹季</div>
+        <div class="info-sub">落地了，先听一个关于昆明的故事</div>
+      </div>
+
+      <div class="info-card" id="c1">
+        <div class="card-row">
+          <span class="card-ico">💜</span>
+          <span class="card-ttl">昆明的五月</span>
+        </div>
+        <div class="card-body">
+          每年 <b>4月下旬 ～ 5月中旬</b>，昆明会迎来一年中最迷人的时刻——蓝花楹盛开。云南大学后山路、盘龙江沿岸、圆通山整片被 <b>紫蓝色花瀑</b> 覆盖，被誉为国内最美蓝花楹圣地。
+        </div>
+      </div>
+
+      <div class="info-card" id="c2">
+        <div class="card-row">
+          <span class="card-ico">📍</span>
+          <span class="card-ttl">最佳观赏点</span>
+        </div>
+        <div class="card-body">
+          🌸 <b>云南大学后山</b> — 最密集，学生氛围浓郁<br/>
+          🌸 <b>盘龙江两岸</b> — 骑行打卡，视野开阔<br/>
+          🌸 <b>圆通山公园</b> — 与樱花混种，层次丰富
+        </div>
+      </div>
+
+      <div class="info-card card-warn" id="c3">
+        <div class="card-row">
+          <span class="card-ico">🧳</span>
+          <span class="card-ttl">但现在不是好时机</span>
+        </div>
+        <div class="card-body">
+          刚落地，大包小包在手，穿花海拍照 <b>体验感折扣很大</b>。蓝花楹值得你轻装专程来赏，现在硬逛会后悔的。
+        </div>
+      </div>
+
+      <div class="info-card card-green" id="c4">
+        <div class="card-row">
+          <span class="card-ico">💡</span>
+          <span class="card-ttl">正确打开方式：返程再来</span>
+        </div>
+        <div class="card-body">
+          先直奔 <b>大理 or 丽江</b> 玩透，返程路过昆明时留足 1 天：<br/><br/>
+          🌸 轻装漫步云大蓝花楹<br/>
+          🚣 翠湖公园喂红嘴鸥<br/>
+          🍜 过桥米线 + 汽锅鸡收尾<br/>
+          🛍️ 景星花鸟市场淘个纪念品
+        </div>
+      </div>
+
+      <button class="btn-depart" id="btn-go" onclick="startLanding()">
+        先去大理 or 丽江 →
+      </button>
+    </div>
+  </div>
+
+  <!-- ==============================
+       飞机落地动画页
+  ============================== -->
+  <div class="page" id="page-landing">
+    <div class="stars" id="stars"></div>
+    <div class="mountain-layer"></div>
+    <div class="runway"><div class="runway-center"></div></div>
+    <div id="plane">✈️</div>
+    <div class="land-msg">旅程开始 · 选择你的目的地</div>
+  </div>
+
+  <!-- ==============================
+       左右二选一页
+  ============================== -->
+  <div class="page" id="page-choose">
+    <button class="back-btn" onclick="goBack('page-choose')">‹&nbsp;返回昆明</button>
+
+    <!-- 大理 -->
+    <div class="side side-dali" onclick="chooseDali()">
+      <div class="bg" id="bg-dali" style="background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="side-inner">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">大理洱海骑行（生态廊道或海东，30公里）</span></div>
+          <div class="spot hot"><span class="dot"></span><span class="spot-emoji">👥</span><span class="spot-text">大理古城（人很多）</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">苍山玉带路徒步（山脊线，上下缆车）</span></div>
+          <div class="spot hot"><span class="dot"></span><span class="spot-emoji">👥</span><span class="spot-text">喜洲稻田（人很多）</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">⛰️</span><span class="spot-text">云想山</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">鸟吊山徒步</span></div>
+        </div>
+        <div class="side-tag">DALI</div>
+        <div class="side-name">大理</div>
+        <div class="side-desc">洱海、苍山、古城与白族风情兼具，适合骑行、徒步和慢节奏风景线旅行。</div>
+        <div class="side-cta">选大理 →</div>
+      </div>
+    </div>
+
+    <div class="vs-badge">VS</div>
+
+    <!-- 丽江 -->
+    <div class="side side-lijiang" onclick="chooseLijiang()">
+      <div class="bg" id="bg-lijiang" style="background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="side-inner">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">玉龙雪山-白沙骑行（25km单程缓坡，来回50km）</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">干涸坝徒步</span></div>
+          <div class="spot hot"><span class="dot"></span><span class="spot-emoji">👥</span><span class="spot-text">丽江古城狮子山（人很多）</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🌄</span><span class="spot-text">白沙日照金山</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">虎跳峡高路徒步</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">老药山徒步</span></div>
+        </div>
+        <div class="side-tag">LIJIANG</div>
+        <div class="side-name">丽江</div>
+        <div class="side-desc">雪山、古镇、峡谷与纳西风情并存，适合高原骑行、徒步和日照金山打卡。</div>
+        <div class="side-cta">选丽江 →</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 生成星星
+    const sc = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*65}%;opacity:${(Math.random()*0.5+0.2).toFixed(2)}`;
+      sc.appendChild(s);
+    }
+
+    let revealed = false;
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function goBack(from) {
+      if (from === 'page-choose') {
+        showPage('page-kunming');
+      }
+    }
+
+    function revealKunming() {
+      if (revealed) return;
+      revealed = true;
+
+      // 背景渐变清晰
+      document.getElementById('km-bg').classList.replace('bg-blur','bg-clear');
+      document.getElementById('km-overlay').classList.replace('overlay-dark','overlay-info');
+
+      // 隐藏落地按钮
+      document.getElementById('km-intro').classList.add('hidden');
+
+      // 显示信息区
+      document.getElementById('km-info').classList.add('visible');
+
+      // 卡片依次入场
+      const seq = [
+        { id: 'c1', delay: 150 },
+        { id: 'c2', delay: 550 },
+        { id: 'c3', delay: 950 },
+        { id: 'c4', delay: 1350 },
+        { id: 'btn-go', delay: 1780 },
+      ];
+      seq.forEach(({ id, delay }) => {
+        setTimeout(() => document.getElementById(id).classList.add('in'), delay);
+      });
+    }
+
+    function startLanding() {
+      // 懒加载大理和丽江背景图（飞机动画期间后台加载，用户无感知）
+      document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.jpg')";
+      document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.jpg')";
+
+      showPage('page-landing');
+      setTimeout(() => document.getElementById('plane').classList.add('landing'), 80);
+      setTimeout(() => showPage('page-choose'), 3300);
+    }
+
+    function chooseDali() {
+      alert('你选择了大理！\n（大理行程页待开发）');
+    }
+    function chooseLijiang() {
+      alert('你选择了丽江！\n（丽江行程页待开发）');
+    }
+  </script>
+</body>
+</html>
