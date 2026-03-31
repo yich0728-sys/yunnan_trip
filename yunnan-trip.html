@@ -672,11 +672,15 @@
       });
     }
 
-    function startLanding() {
-      // 懒加载大理和丽江背景图（飞机动画期间后台加载，用户无感知）
-      document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.jpg')";
-      document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.jpg')";
+    // 昆明页加载后 1.5 秒，提前预加载大理/丽江图片
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.jpg')";
+        document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.jpg')";
+      }, 1500);
+    });
 
+    function startLanding() {
       showPage('page-landing');
       setTimeout(() => document.getElementById('plane').classList.add('landing'), 80);
       setTimeout(() => showPage('page-choose'), 3300);
