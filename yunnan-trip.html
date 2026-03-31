@@ -488,7 +488,7 @@
   <!-- ==============================
        昆明页
   ============================== -->
-  <div class="page active" id="page-kunming">
+  <div class="page" id="page-kunming">
     <div class="bg bg-blur" id="km-bg"
          style="background-image:url('昆明背景图.jpg'); background-size:cover; background-position:center;"></div>
     <div class="overlay overlay-dark" id="km-overlay"></div>
@@ -565,12 +565,12 @@
   <!-- ==============================
        飞机落地动画页
   ============================== -->
-  <div class="page" id="page-landing">
+  <div class="page active" id="page-landing">
     <div class="stars" id="stars"></div>
     <div class="mountain-layer"></div>
     <div class="runway"><div class="runway-center"></div></div>
     <div id="plane">✈️</div>
-    <div class="land-msg">旅程开始 · 选择你的目的地</div>
+    <div class="land-msg">飞机正在落地中 · 无需点击，稍等即可进入昆明</div>
   </div>
 
   <!-- ==============================
@@ -672,18 +672,20 @@
       });
     }
 
-    // 昆明页加载后 1.5 秒，提前预加载大理/丽江图片
+    // 首屏先展示飞机落地动画，再自动进入昆明页
     window.addEventListener('load', () => {
+      setTimeout(() => document.getElementById('plane').classList.add('landing'), 120);
+      setTimeout(() => showPage('page-kunming'), 3300);
+
+      // 昆明页出现后 1.5 秒，后台预加载大理/丽江图片
       setTimeout(() => {
         document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.jpg')";
         document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.jpg')";
-      }, 1500);
+      }, 4800);
     });
 
     function startLanding() {
-      showPage('page-landing');
-      setTimeout(() => document.getElementById('plane').classList.add('landing'), 80);
-      setTimeout(() => showPage('page-choose'), 3300);
+      showPage('page-choose');
     }
 
     function chooseDali() {
