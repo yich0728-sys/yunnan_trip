@@ -334,8 +334,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 64px 0 52px;
+      justify-content: flex-end;
+      padding-bottom: 0;
       cursor: pointer;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
@@ -373,13 +373,19 @@
     }
 
     .side-inner {
-      position: relative;
+      position: absolute;
+      bottom: 0;
+      left: 0; right: 0;
       z-index: 2;
       text-align: center;
-      padding: 0 12px 0;
-      width: 100%;
-      max-width: 92%;
-      margin-top: 54px;
+      padding: 0 12px 48px;
+    }
+    .spots-wrap {
+      position: absolute;
+      top: 60px;
+      left: 0; right: 0;
+      z-index: 2;
+      padding: 0 10px;
     }
     .side-tag {
       display: inline-block;
@@ -483,13 +489,12 @@
     }
 
     @media (max-width: 768px) {
-      .side {
-        padding: 58px 0 40px;
+      .spots-wrap {
+        top: 52px;
+        padding: 0 7px;
       }
       .side-inner {
-        max-width: 96%;
-        margin-top: 28px;
-        padding: 0 8px;
+        padding: 0 8px 36px;
       }
       .spots {
         gap: 6px;
@@ -634,7 +639,7 @@
     <div class="side side-dali" onclick="chooseDali()">
       <div class="bg" id="bg-dali" style="background-size:cover; background-position:center;"></div>
       <div class="side-shade"></div>
-      <div class="side-inner">
+      <div class="spots-wrap">
         <div class="spots">
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">大理洱海骑行（生态廊道或海东，30公里）</span></div>
           <div class="spot hot"><span class="dot"></span><span class="spot-emoji">👥</span><span class="spot-text">大理古城（人很多）</span></div>
@@ -643,6 +648,8 @@
           <div class="spot"><span class="dot"></span><span class="spot-emoji">⛰️</span><span class="spot-text">云想山</span></div>
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">鸟吊山徒步</span></div>
         </div>
+      </div>
+      <div class="side-inner">
         <div class="side-tag">DALI</div>
         <div class="side-name">大理</div>
         <div class="side-desc">洱海、苍山、古城与白族风情兼具，适合骑行、徒步和慢节奏风景线旅行。</div>
@@ -656,7 +663,7 @@
     <div class="side side-lijiang" onclick="chooseLijiang()">
       <div class="bg" id="bg-lijiang" style="background-size:cover; background-position:center;"></div>
       <div class="side-shade"></div>
-      <div class="side-inner">
+      <div class="spots-wrap">
         <div class="spots">
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">玉龙雪山-白沙骑行（25km单程缓坡，来回50km）</span></div>
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">干涸坝徒步</span></div>
@@ -665,6 +672,8 @@
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">虎跳峡高路徒步</span></div>
           <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">老药山徒步</span></div>
         </div>
+      </div>
+      <div class="side-inner">
         <div class="side-tag">LIJIANG</div>
         <div class="side-name">丽江</div>
         <div class="side-desc">雪山、古镇、峡谷与纳西风情并存，适合高原骑行、徒步和日照金山打卡。</div>
