@@ -664,7 +664,10 @@
           sub.textContent = '加载完成，出发！';
           setTimeout(() => {
             document.getElementById('loading-screen').classList.add('done');
-            setTimeout(() => document.getElementById('loading-screen').remove(), 700);
+            setTimeout(() => {
+              document.getElementById('loading-screen').remove();
+              startMusic();
+            }, 700);
           }, 400);
         }
       }
@@ -1601,6 +1604,80 @@
       pointer-events: all;
     }
   </style>
+
+  <!-- 音乐播放器 -->
+  <div id="music-btn" onclick="toggleMusic()" title="Espresso (On Vacation Version) - Sabrina Carpenter">
+    <div id="music-disc">🎵</div>
+  </div>
+  <audio id="bg-music" loop preload="none">
+    <source src="https://c6.y.qq.com/base/fcgi-bin/u?__=1O2evwOeaEu3" type="audio/mpeg">
+  </audio>
+
+  <style>
+    #music-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      z-index: 500;
+      width: 44px;
+      height: 44px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: border-color 0.2s;
+    }
+    #music-btn:active { border-color: rgba(245,197,24,0.6); }
+    #music-disc {
+      font-size: 22px;
+      line-height: 1;
+      transform-origin: center;
+    }
+    #music-disc.spinning {
+      animation: spinDisc 3s linear infinite;
+    }
+    @keyframes spinDisc {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    const audio = document.getElementById('bg-music');
+    const btn   = document.getElementById('music-btn');
+    const disc  = document.getElementById('music-disc');
+    let musicPlaying = false;
+
+    function startMusic() {
+      btn.style.display = 'flex';
+      audio.volume = 0.5;
+      audio.play().then(() => {
+        musicPlaying = true;
+        disc.classList.add('spinning');
+      }).catch(() => {
+        // 自动播放被浏览器阻止，显示图标等用户点击
+        musicPlaying = false;
+      });
+    }
+
+    function toggleMusic() {
+      if (musicPlaying) {
+        audio.pause();
+        musicPlaying = false;
+        disc.classList.remove('spinning');
+      } else {
+        audio.play();
+        musicPlaying = true;
+        disc.classList.add('spinning');
+      }
+    }
+  </script>
 
 </body>
 </html>
