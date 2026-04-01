@@ -852,8 +852,9 @@
           setCardSelected('haidong', false);
           setCheck('haidong', 'off');
           document.getElementById('dc-haidong').dataset.autoFromEast = '0';
+          document.getElementById('dc-haidong').style.pointerEvents = '';
         }
-        if (manualSelected.size === 0) setAutoActive(false);
+        setAutoActive(false);
       }
       updateFooter();
     }
