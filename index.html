@@ -951,7 +951,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🚴 大理洱海骑行</div>
               <div class="dcard-meta">
-                <span class="stars">★★★★★</span>
+                <span class="stars-num">⭐ 5.0</span>
                 <span class="meta-tag">1天</span>
               </div>
             </div>
@@ -986,7 +986,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🏯 大理古城</div>
               <div class="dcard-meta">
-                <span class="stars">★★☆☆☆</span>
+                <span class="stars-num">⭐ 2.0</span>
                 <span class="meta-tag">不限</span>
                 <span class="auto-tag">自动</span>
               </div>
@@ -1005,7 +1005,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🥾 苍山玉带路徒步</div>
               <div class="dcard-meta">
-                <span class="stars">★★★⭐☆</span>                <span class="meta-tag">半天</span>
+                <span class="stars-num">⭐ 3.5</span>                <span class="meta-tag">半天</span>
               </div>
             </div>
             <div class="dcard-check" id="chk-cangshan"></div>
@@ -1023,7 +1023,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🌾 喜洲麦田</div>
               <div class="dcard-meta">
-                <span class="stars">★★★☆☆</span>
+                <span class="stars-num">⭐ 3.0</span>
                 <span class="meta-tag">2小时</span>
                 <span class="auto-tag">自动</span>
               </div>
@@ -1043,7 +1043,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🌅 海东</div>
               <div class="dcard-meta">
-                <span class="stars">★★★⭐☆</span>                <span class="meta-tag">不限</span>
+                <span class="stars-num">⭐ 3.5</span>                <span class="meta-tag">不限</span>
               </div>
             </div>
             <div class="dcard-check" id="chk-haidong"></div>
@@ -1061,7 +1061,7 @@
             <div class="dcard-left">
               <div class="dcard-title">⛰️ 云想山</div>
               <div class="dcard-meta">
-                <span class="stars">★★★☆☆</span>
+                <span class="stars-num">⭐ 3.0</span>
                 <span class="meta-tag">2小时</span>
               </div>
             </div>
@@ -1080,7 +1080,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🦅 鸟吊山徒步</div>
               <div class="dcard-meta">
-                <span class="stars">★★★★⭐</span>
+                <span class="stars-num">⭐ 4.5</span>
                 <span class="meta-tag">1天</span>
                 <span class="excl-tag">与沙溪互斥</span>
               </div>
@@ -1100,7 +1100,7 @@
             <div class="dcard-left">
               <div class="dcard-title">🏘️ 沙溪古镇</div>
               <div class="dcard-meta">
-                <span class="stars">★★★★☆</span>
+                <span class="stars-num">⭐ 4.0</span>
                 <span class="meta-tag">1天</span>
                 <span class="excl-tag">与鸟吊山互斥</span>
               </div>
@@ -1146,6 +1146,10 @@
       background: #0e1117;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       flex-shrink: 0;
+    }
+    .dali-nav .back-btn {
+      position: static;
+      z-index: auto;
     }
     .dali-nav-title {
       font-size: 15px;
@@ -1262,6 +1266,7 @@
       flex-wrap: wrap;
     }
     .stars { font-size: 12px; color: #f5c518; letter-spacing: 1px; }
+    .stars-num { font-size: 13px; color: #f5c518; font-weight: bold; }
     .meta-tag {
       font-size: 11px;
       padding: 1px 7px;
