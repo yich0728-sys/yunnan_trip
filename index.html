@@ -894,13 +894,11 @@
       showPage('page-dali');
     }
     // ===== 大理内页逻辑 =====
-    const AUTO_ITEMS = ['oldtown', 'xizhou']; // 始终自动选中的项
     let bikeSelected = false;
     let bikeRoute = null; // 'west' | 'east'
-    // 手动可选项（不含自动、不含骑行）
-    const MANUAL_ITEMS = ['oldtown', 'cangshan', 'xizhou', 'haidong', 'yunxiang', 'niaodiao', 'shaxi'];
     const EXCL = { niaodiao: 'shaxi', shaxi: 'niaodiao' }; // 互斥对
-    let manualSelected = new Set();
+    let autoSelected  = new Set(); // 系统自动勾选（骑行时：古城+喜洲+海东东线）
+    let manualSelected = new Set(); // 用户手动勾选
 
     function getManualMax() {
       return bikeSelected ? 2 : 3;
@@ -931,14 +929,14 @@
         const autoTag = document.getElementById('auto-tag-' + id);
         if (!card) return;
         if (on) {
-          manualSelected.add(id);
+          autoSelected.add(id);
+          manualSelected.delete(id); // 确保不在手动集里重复
           setCardSelected(id, true);
           setCheck(id, 'auto');
           card.style.pointerEvents = 'none';
           if (autoTag) autoTag.style.display = '';
         } else {
-          // 只在骑行取消时才撤销自动选中
-          manualSelected.delete(id);
+          autoSelected.delete(id);
           setCardSelected(id, false);
           setCheck(id, 'off');
           card.style.pointerEvents = '';
@@ -956,7 +954,7 @@
         setCheck('bike', 'on');
         opts.classList.add('open');
         setAutoActive(true);
-        // 如果手动已选超额，去掉最后一个
+        // 手动超额时去掉最后加入的
         while (manualSelected.size > getManualMax()) {
           const last = [...manualSelected].pop();
           manualSelected.delete(last);
@@ -969,13 +967,14 @@
         setCheck('bike', 'off');
         opts.classList.remove('open');
         document.querySelectorAll('.bike-opt').forEach(o => o.classList.remove('selected'));
-        // 海东手动联动
-        if (manualSelected.has('haidong') && document.getElementById('dc-haidong').dataset.autoFromEast === '1') {
-          manualSelected.delete('haidong');
+        // 撤销海东自动
+        const hdCard = document.getElementById('dc-haidong');
+        if (hdCard && hdCard.dataset.autoFromEast === '1') {
+          autoSelected.delete('haidong');
           setCardSelected('haidong', false);
           setCheck('haidong', 'off');
-          document.getElementById('dc-haidong').dataset.autoFromEast = '0';
-          document.getElementById('dc-haidong').style.pointerEvents = '';
+          hdCard.dataset.autoFromEast = '0';
+          hdCard.style.pointerEvents = '';
         }
         setAutoActive(false);
       }
@@ -991,8 +990,9 @@
 
       const hdCard = document.getElementById('dc-haidong');
       if (route === 'east') {
-        // 海东自动选中
-        manualSelected.add('haidong');
+        // 海东自动选中（移出手动集，放入自动集）
+        manualSelected.delete('haidong');
+        autoSelected.add('haidong');
         setCardSelected('haidong', true);
         setCheck('haidong', 'auto');
         hdCard.dataset.autoFromEast = '1';
@@ -1000,18 +1000,16 @@
       } else {
         // 取消海东自动
         if (hdCard.dataset.autoFromEast === '1') {
-          manualSelected.delete('haidong');
+          autoSelected.delete('haidong');
           setCardSelected('haidong', false);
           setCheck('haidong', 'off');
           hdCard.dataset.autoFromEast = '0';
           hdCard.style.pointerEvents = '';
         }
       }
-      // 超额保护
+      // 手动超额保护
       while (manualSelected.size > getManualMax()) {
-        const cands = [...manualSelected].filter(x => x !== 'haidong');
-        if (!cands.length) break;
-        const rm = cands.pop();
+        const rm = [...manualSelected].pop();
         manualSelected.delete(rm);
         setCardSelected(rm, false);
         setCheck(rm, 'off');
@@ -1020,12 +1018,12 @@
     }
 
     function toggleCard(id) {
+      if (autoSelected.has(id)) return; // 自动选中项不可手动操作
       if (manualSelected.has(id)) {
         // 取消
         manualSelected.delete(id);
         setCardSelected(id, false);
         setCheck(id, 'off');
-        if (!bikeSelected && manualSelected.size === 0) setAutoActive(false);
       } else {
         // 互斥检查
         if (EXCL[id] && manualSelected.has(EXCL[id])) {
@@ -1034,7 +1032,7 @@
         }
         // 上限检查
         if (manualSelected.size >= getManualMax()) {
-          alert(bikeSelected ? `选择骑行后最多可额外选 ${getManualMax()} 个项目` : `最多可选 ${getManualMax()} 个项目`);
+          alert(bikeSelected ? `骑行已含古城+喜洲，还可手选 ${getManualMax()} 个` : `最多可选 ${getManualMax()} 个项目`);
           return;
         }
         manualSelected.add(id);
@@ -1045,7 +1043,8 @@
     }
 
     function updateFooter() {
-      const total = (bikeSelected ? 1 : 0) + manualSelected.size;
+      const allSelected = new Set([...autoSelected, ...manualSelected]);
+      const total = (bikeSelected ? 1 : 0) + allSelected.size;
       document.getElementById('sel-count').textContent = total;
 
       const btn = document.getElementById('footer-btn');
@@ -1059,35 +1058,32 @@
         return;
       }
 
+      const labelMap = {
+        oldtown:'🏯 大理古城', xizhou:'🌾 喜洲麦田',
+        cangshan:'🥾 苍山玉带路', haidong:'🌅 海东',
+        yunxiang:'⛰️ 云想山', niaodiao:'🦅 鸟吊山', shaxi:'🏘️ 沙溪古镇'
+      };
       const labels = [];
       if (bikeSelected) labels.push(`🚴 洱海骑行（${bikeRoute === 'east' ? '海东环线' : bikeRoute === 'west' ? '海西路线' : '未选路线'}）`);
-      manualSelected.forEach(id => {
-        const map = { cangshan:'🥾 苍山玉带路', haidong:'🌅 海东', yunxiang:'⛰️ 云想山', niaodiao:'🦅 鸟吊山', shaxi:'🏘️ 沙溪古镇' };
-        labels.push(map[id] || id);
-      });
+      allSelected.forEach(id => { if (labelMap[id]) labels.push(labelMap[id]); });
+      manualSelected.forEach(id => { if (!autoSelected.has(id) && !labelMap[id]) labels.push(id); });
       summary.textContent = labels.join(' · ');
 
-      // 计算费用范围
+      // 计算费用
       const prices = {
-        bike_west: [150, 150],
-        bike_east: [320, 320],
-        oldtown:   [0,   0  ],
-        cangshan:  [200, 200],
-        xizhou:    [60,  60 ],
-        haidong:   [150, 320],
-        yunxiang:  [30,  30 ],
-        niaodiao:  [100, 100],
-        shaxi:     [120, 120],
+        bike_west: [150, 150], bike_east: [320, 320],
+        oldtown: [0, 0], cangshan: [200, 200], xizhou: [60, 60],
+        haidong: [150, 320], yunxiang: [30, 30], niaodiao: [100, 100], shaxi: [120, 120],
       };
       let minTotal = 0, maxTotal = 0;
       if (bikeSelected) {
         const key = bikeRoute === 'east' ? 'bike_east' : 'bike_west';
         const p = prices[key] || [0,0];
         minTotal += p[0]; maxTotal += p[1];
-        // 骑行自动含喜洲+古城（喜洲60，古城0），不重复累加
       }
-      manualSelected.forEach(id => {
-        if (bikeSelected && (id === 'xizhou' || id === 'oldtown')) return;
+      allSelected.forEach(id => {
+        // 骑行时喜洲费用已含在骑行价中，古城免费
+        if (bikeSelected && id === 'xizhou') return;
         const p = prices[id];
         if (p) { minTotal += p[0]; maxTotal += p[1]; }
       });
@@ -1628,6 +1624,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       transition: border-color 0.2s;
@@ -1682,9 +1679,10 @@
         musicPlaying = false;
         disc.classList.remove('spinning');
       } else {
-        audio.play();
-        musicPlaying = true;
-        disc.classList.add('spinning');
+        audio.play().then(() => {
+          musicPlaying = true;
+          disc.classList.add('spinning');
+        }).catch(() => {});
       }
     }
   </script>
