@@ -774,7 +774,7 @@
     let bikeSelected = false;
     let bikeRoute = null; // 'west' | 'east'
     // 手动可选项（不含自动、不含骑行）
-    const MANUAL_ITEMS = ['cangshan', 'haidong', 'yunxiang', 'niaodiao', 'shaxi'];
+    const MANUAL_ITEMS = ['oldtown', 'cangshan', 'xizhou', 'haidong', 'yunxiang', 'niaodiao', 'shaxi'];
     const EXCL = { niaodiao: 'shaxi', shaxi: 'niaodiao' }; // 互斥对
     let manualSelected = new Set();
 
@@ -804,9 +804,23 @@
 
     function setAutoActive(on) {
       ['oldtown','xizhou'].forEach(id => {
-        const el = document.getElementById('dc-' + id);
-        if (el) el.classList.toggle('active-auto', on);
-        setCheck(id, on ? 'auto' : 'off');
+        const card = document.getElementById('dc-' + id);
+        const autoTag = document.getElementById('auto-tag-' + id);
+        if (!card) return;
+        if (on) {
+          manualSelected.add(id);
+          setCardSelected(id, true);
+          setCheck(id, 'auto');
+          card.style.pointerEvents = 'none';
+          if (autoTag) autoTag.style.display = '';
+        } else {
+          // 只在骑行取消时才撤销自动选中
+          manualSelected.delete(id);
+          setCardSelected(id, false);
+          setCheck(id, 'off');
+          card.style.pointerEvents = '';
+          if (autoTag) autoTag.style.display = 'none';
+        }
       });
     }
 
@@ -902,7 +916,6 @@
         manualSelected.add(id);
         setCardSelected(id, true);
         setCheck(id, 'on');
-        if (!bikeSelected) setAutoActive(true);
       }
       updateFooter();
     }
@@ -934,6 +947,7 @@
       const prices = {
         bike_west: [150, 150],
         bike_east: [320, 320],
+        oldtown:   [0,   0  ],
         cangshan:  [200, 200],
         xizhou:    [60,  60 ],
         haidong:   [150, 320],
@@ -946,11 +960,10 @@
         const key = bikeRoute === 'east' ? 'bike_east' : 'bike_west';
         const p = prices[key] || [0,0];
         minTotal += p[0]; maxTotal += p[1];
-        // 骑行自动含喜洲+古城（喜洲60，古城0）
-        minTotal += 60; maxTotal += 60;
+        // 骑行自动含喜洲+古城（喜洲60，古城0），不重复累加
       }
       manualSelected.forEach(id => {
-        if (id === 'xizhou' && bikeSelected) return; // 骑行已算喜洲
+        if (bikeSelected && (id === 'xizhou' || id === 'oldtown')) return;
         const p = prices[id];
         if (p) { minTotal += p[0]; maxTotal += p[1]; }
       });
@@ -1030,7 +1043,7 @@
         </div>
 
         <!-- 2. 大理古城 -->
-        <div class="dcard dcard-auto" id="dc-oldtown">
+        <div class="dcard" id="dc-oldtown" onclick="toggleCard('oldtown')">
           <div class="dcard-bg" style="background-image:url('大理古城.jpg')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
@@ -1039,7 +1052,7 @@
               <div class="dcard-meta">
                 <span class="stars-num">⭐ 2.0</span>
                 <span class="meta-tag">不限</span>
-                <span class="auto-tag">自动</span>
+                <span class="auto-tag" id="auto-tag-oldtown" style="display:none">骑行含</span>
               </div>
             </div>
             <div class="dcard-check" id="chk-oldtown"></div>
@@ -1068,7 +1081,7 @@
         </div>
 
         <!-- 4. 喜洲麦田 -->
-        <div class="dcard dcard-auto" id="dc-xizhou">
+        <div class="dcard" id="dc-xizhou" onclick="toggleCard('xizhou')">
           <div class="dcard-bg" style="background-image:url('喜洲麦田.jpeg')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
@@ -1077,7 +1090,7 @@
               <div class="dcard-meta">
                 <span class="stars-num">⭐ 3.0</span>
                 <span class="meta-tag">2小时</span>
-                <span class="auto-tag">自动</span>
+                <span class="auto-tag" id="auto-tag-xizhou" style="display:none">骑行含</span>
                 <span class="price-tag">¥60/人（交通）</span>
               </div>
             </div>
