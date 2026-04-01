@@ -1080,13 +1080,19 @@
         const key = bikeRoute === 'east' ? 'bike_east' : 'bike_west';
         const p = prices[key] || [0,0];
         minTotal += p[0]; maxTotal += p[1];
+        // 骑行费用已含喜洲（海西/海东均含），海东路线费用也已含在320内
+        // 只需计算非自动选中的手动项目
+        manualSelected.forEach(id => {
+          const p = prices[id];
+          if (p) { minTotal += p[0]; maxTotal += p[1]; }
+        });
+      } else {
+        // 未选骑行：所有项目单独计算，海东固定150打车费
+        allSelected.forEach(id => {
+          const p = id === 'haidong' ? [150, 150] : prices[id];
+          if (p) { minTotal += p[0]; maxTotal += p[1]; }
+        });
       }
-      allSelected.forEach(id => {
-        // 骑行时喜洲费用已含在骑行价中，古城免费
-        if (bikeSelected && id === 'xizhou') return;
-        const p = prices[id];
-        if (p) { minTotal += p[0]; maxTotal += p[1]; }
-      });
 
       if (minTotal === 0) {
         priceEl.textContent = '';
