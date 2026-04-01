@@ -903,8 +903,7 @@
     let manualSelected = new Set();
 
     function getManualMax() {
-      // 骑行算1个手动槽，最多3个手动
-      return bikeSelected ? 2 : 3;
+      return bikeSelected ? 3 : 2;
     }
 
     function setCheck(id, state) {
@@ -1035,7 +1034,7 @@
         }
         // 上限检查
         if (manualSelected.size >= getManualMax()) {
-          alert(`最多还能选 ${getManualMax()} 个项目（骑行已占1个名额）`);
+          alert(bikeSelected ? `选择骑行后最多可额外选 ${getManualMax()} 个项目` : `最多可选 ${getManualMax()} 个项目`);
           return;
         }
         manualSelected.add(id);
@@ -1616,8 +1615,8 @@
   <style>
     #music-btn {
       position: fixed;
-      bottom: 24px;
-      right: 20px;
+      top: 16px;
+      right: 16px;
       z-index: 500;
       width: 44px;
       height: 44px;
@@ -1657,12 +1656,23 @@
     function startMusic() {
       btn.style.display = 'flex';
       audio.volume = 0.5;
+      // 先尝试自动播放
       audio.play().then(() => {
         musicPlaying = true;
         disc.classList.add('spinning');
       }).catch(() => {
-        // 自动播放被浏览器阻止，显示图标等用户点击
+        // 浏览器阻止自动播放，等待用户首次触摸/点击任意位置
         musicPlaying = false;
+        function unlockOnInteraction() {
+          audio.play().then(() => {
+            musicPlaying = true;
+            disc.classList.add('spinning');
+          }).catch(() => {});
+          document.removeEventListener('touchstart', unlockOnInteraction);
+          document.removeEventListener('click', unlockOnInteraction);
+        }
+        document.addEventListener('touchstart', unlockOnInteraction, { once: true });
+        document.addEventListener('click', unlockOnInteraction, { once: true });
       });
     }
 
