@@ -648,6 +648,7 @@
         '云想山.webp',
         '鸟吊山.webp',
         '沙溪古镇.jpg',
+        '者磨山.jpg',
       ];
       let loaded = 0;
       const total = images.length;
@@ -1061,7 +1062,7 @@
       const labelMap = {
         oldtown:'🏯 大理古城', xizhou:'🌾 喜洲麦田',
         cangshan:'🥾 苍山玉带路', haidong:'🌅 海东',
-        yunxiang:'⛰️ 云想山', niaodiao:'🦅 鸟吊山', shaxi:'🏘️ 沙溪古镇'
+        yunxiang:'⛰️ 云想山', niaodiao:'🦅 鸟吊山', shaxi:'🏘️ 沙溪古镇', zhemo:'🌄 者摩山'
       };
       const labels = [];
       if (bikeSelected) labels.push(`🚴 洱海骑行（${bikeRoute === 'east' ? '海东环线' : bikeRoute === 'west' ? '海西路线' : '未选路线'}）`);
@@ -1073,7 +1074,7 @@
       const prices = {
         bike_west: [150, 150], bike_east: [320, 320],
         oldtown: [0, 0], cangshan: [200, 200], xizhou: [60, 60],
-        haidong: [150, 320], yunxiang: [30, 30], niaodiao: [100, 100], shaxi: [120, 120],
+        haidong: [150, 320], yunxiang: [30, 30], niaodiao: [100, 100], shaxi: [120, 120], zhemo: [80, 80],
       };
       let minTotal = 0, maxTotal = 0;
       if (bikeSelected) {
@@ -1155,6 +1156,7 @@
                 <span class="bike-opt-price">约 ¥150/人</span>
               </div>
               <div class="bike-opt-desc">古城 → 苍山 → 才村 → 喜洲 → 返回古城（约30km）。左苍山右洱海，景色极度依赖天气，晴天惊艳阴天打折，必须晴天才好看，节假日人较多。费用约 <b>¥150/人（一天）</b>。<br><b>自动选中：喜洲麦田 + 大理古城</b></div>
+              <a class="xhs-link" href="http://xhslink.com/o/7aRGFtTu1SP" target="_blank" onclick="event.stopPropagation()">📕 小红书：大理苍山下洱海旁骑行</a>
             </div>
             <div class="bike-opt" id="opt-east" onclick="selectRoute('east',event)">
               <div class="bike-opt-top">
@@ -1305,6 +1307,26 @@
           </div>
           <div class="dcard-desc">位于剑川县，《去有风的地方》原型取景地，是一座节奏悠闲的文艺古镇，逛半天恰到好处。秋景尤为绝美，可考虑"大理→沙溪→丽江"的串联路线。交通不便，建议自驾。</div>
           <a class="xhs-link" href="http://xhslink.com/o/7Dspdajgqkl" target="_blank" onclick="event.stopPropagation()">📕 小红书：沙溪古镇一日游</a>
+          </div>
+        </div>
+
+        <!-- 9. 者摩山 -->
+        <div class="dcard" id="dc-zhemo" onclick="toggleCard('zhemo')">
+          <div class="dcard-bg" style="background-image:url('者磨山.jpg')"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🌄 者摩山</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">3小时</span>
+                <span class="price-tag">¥80/人（包车）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="chk-zhemo"></div>
+          </div>
+          <div class="dcard-desc">藏于大理郊野的小众山头，以绝美蓝调时刻著称——日落后天空渐次晕染成深蓝与橙紫，如同《爱乐之城》里那场山顶起舞。山顶视野开阔，可远眺洱海与苍山轮廓。<br><b>⚠️ 注意：下午4点前必须入山，切勿踩点前往。</b></div>
+          <a class="xhs-link" href="http://xhslink.com/o/3KCHulTdNn1" target="_blank" onclick="event.stopPropagation()">📕 小红书：者摩山的蓝调时刻</a>
           </div>
         </div>
 
