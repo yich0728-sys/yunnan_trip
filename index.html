@@ -637,18 +637,18 @@
   <script>
     (function() {
       const images = [
-        '昆明背景图.jpg',
-        '大理背景图.jpg',
-        '丽江背景图.jpg',
-        '大理洱海骑行.jpg',
-        '大理古城.jpg',
-        '苍山玉带路.jpeg',
-        '喜洲麦田.jpeg',
-        '大理海东.jpg',
+        '昆明背景图.webp',
+        '大理背景图.webp',
+        '丽江背景图.webp',
+        '大理洱海骑行.webp',
+        '大理古城.webp',
+        '苍山玉带路.webp',
+        '喜洲麦田.webp',
+        '大理海东.webp',
         '云想山.webp',
         '鸟吊山.webp',
-        '沙溪古镇.jpg',
-        '者磨山.jpg',
+        '沙溪古镇.webp',
+        '者磨山.webp',
       ];
       let loaded = 0;
       const total = images.length;
@@ -682,7 +682,7 @@
   </script>
   <div class="page" id="page-kunming">
     <div class="bg bg-blur" id="km-bg"
-         style="background-image:url('昆明背景图.jpg'); background-size:cover; background-position:center;"></div>
+         style="background-image:url('昆明背景图.webp'); background-size:cover; background-position:center;"></div>
     <div class="overlay overlay-dark" id="km-overlay"></div>
 
     <!-- 初始状态 -->
@@ -880,8 +880,8 @@
           setTimeout(() => showPage('page-kunming'), 3300);
           // 昆明页出现后预加载大理/丽江（已经在loading时加载过，此处仅作bg赋值）
           setTimeout(() => {
-            document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.jpg')";
-            document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.jpg')";
+            document.getElementById('bg-dali').style.backgroundImage = "url('大理背景图.webp')";
+            document.getElementById('bg-lijiang').style.backgroundImage = "url('丽江背景图.webp')";
           }, 4800);
         }
       }, 100);
@@ -1136,7 +1136,7 @@
 
         <!-- 1. 洱海骑行 -->
         <div class="dcard" id="dc-bike" onclick="toggleBike()">
-          <div class="dcard-bg" style="background-image:url('大理洱海骑行.jpg')"></div>
+          <div class="dcard-bg" style="background-image:url('大理洱海骑行.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1172,7 +1172,7 @@
 
         <!-- 2. 大理古城 -->
         <div class="dcard" id="dc-oldtown" onclick="toggleCard('oldtown')">
-          <div class="dcard-bg" style="background-image:url('大理古城.jpg')"></div>
+          <div class="dcard-bg" style="background-image:url('大理古城.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1191,7 +1191,7 @@
 
         <!-- 3. 苍山玉带路 -->
         <div class="dcard" id="dc-cangshan" onclick="toggleCard('cangshan')">
-          <div class="dcard-bg" style="background-image:url('苍山玉带路.jpeg')"></div>
+          <div class="dcard-bg" style="background-image:url('苍山玉带路.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1210,7 +1210,7 @@
 
         <!-- 4. 喜洲麦田 -->
         <div class="dcard" id="dc-xizhou" onclick="toggleCard('xizhou')">
-          <div class="dcard-bg" style="background-image:url('喜洲麦田.jpeg')"></div>
+          <div class="dcard-bg" style="background-image:url('喜洲麦田.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1231,7 +1231,7 @@
 
         <!-- 5. 海东 -->
         <div class="dcard" id="dc-haidong" onclick="toggleCard('haidong')">
-          <div class="dcard-bg" style="background-image:url('大理海东.jpg')"></div>
+          <div class="dcard-bg" style="background-image:url('大理海东.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1291,7 +1291,7 @@
 
         <!-- 8. 沙溪古镇 -->
         <div class="dcard" id="dc-shaxi" onclick="toggleCard('shaxi')">
-          <div class="dcard-bg" style="background-image:url('沙溪古镇.jpg')"></div>
+          <div class="dcard-bg" style="background-image:url('沙溪古镇.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1312,7 +1312,7 @@
 
         <!-- 9. 者摩山 -->
         <div class="dcard" id="dc-zhemo" onclick="toggleCard('zhemo')">
-          <div class="dcard-bg" style="background-image:url('者磨山.jpg')"></div>
+          <div class="dcard-bg" style="background-image:url('者磨山.webp')"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
