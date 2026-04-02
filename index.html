@@ -640,15 +640,6 @@
         '昆明背景图.webp',
         '大理背景图.webp',
         '丽江背景图.webp',
-        '大理洱海骑行.webp',
-        '大理古城.webp',
-        '苍山玉带路.webp',
-        '喜洲麦田.webp',
-        '大理海东.webp',
-        '云想山.webp',
-        '鸟吊山.webp',
-        '沙溪古镇.webp',
-        '者磨山.webp',
       ];
       let loaded = 0;
       const total = images.length;
@@ -891,7 +882,14 @@
       showPage('page-choose');
     }
 
+    let daliImgsLoaded = false;
     function chooseDali() {
+      if (!daliImgsLoaded) {
+        daliImgsLoaded = true;
+        document.querySelectorAll('.dcard-bg[data-bg]').forEach(el => {
+          el.style.backgroundImage = "url('" + el.dataset.bg + "')";
+        });
+      }
       showPage('page-dali');
     }
     // ===== 大理内页逻辑 =====
@@ -1136,7 +1134,7 @@
 
         <!-- 1. 洱海骑行 -->
         <div class="dcard" id="dc-bike" onclick="toggleBike()">
-          <div class="dcard-bg" style="background-image:url('大理洱海骑行.webp')"></div>
+          <div class="dcard-bg" data-bg="大理洱海骑行.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1172,7 +1170,7 @@
 
         <!-- 2. 大理古城 -->
         <div class="dcard" id="dc-oldtown" onclick="toggleCard('oldtown')">
-          <div class="dcard-bg" style="background-image:url('大理古城.webp')"></div>
+          <div class="dcard-bg" data-bg="大理古城.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1191,7 +1189,7 @@
 
         <!-- 3. 苍山玉带路 -->
         <div class="dcard" id="dc-cangshan" onclick="toggleCard('cangshan')">
-          <div class="dcard-bg" style="background-image:url('苍山玉带路.webp')"></div>
+          <div class="dcard-bg" data-bg="苍山玉带路.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1210,7 +1208,7 @@
 
         <!-- 4. 喜洲麦田 -->
         <div class="dcard" id="dc-xizhou" onclick="toggleCard('xizhou')">
-          <div class="dcard-bg" style="background-image:url('喜洲麦田.webp')"></div>
+          <div class="dcard-bg" data-bg="喜洲麦田.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1231,7 +1229,7 @@
 
         <!-- 5. 海东 -->
         <div class="dcard" id="dc-haidong" onclick="toggleCard('haidong')">
-          <div class="dcard-bg" style="background-image:url('大理海东.webp')"></div>
+          <div class="dcard-bg" data-bg="大理海东.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1250,7 +1248,7 @@
 
         <!-- 6. 云想山 -->
         <div class="dcard" id="dc-yunxiang" onclick="toggleCard('yunxiang')">
-          <div class="dcard-bg" style="background-image:url('云想山.webp')"></div>
+          <div class="dcard-bg" data-bg="云想山.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1270,7 +1268,7 @@
 
         <!-- 7. 鸟吊山 -->
         <div class="dcard" id="dc-niaodiao" onclick="toggleCard('niaodiao')">
-          <div class="dcard-bg" style="background-image:url('鸟吊山.webp')"></div>
+          <div class="dcard-bg" data-bg="鸟吊山.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1291,7 +1289,7 @@
 
         <!-- 8. 沙溪古镇 -->
         <div class="dcard" id="dc-shaxi" onclick="toggleCard('shaxi')">
-          <div class="dcard-bg" style="background-image:url('沙溪古镇.webp')"></div>
+          <div class="dcard-bg" data-bg="沙溪古镇.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
@@ -1312,7 +1310,7 @@
 
         <!-- 9. 者摩山 -->
         <div class="dcard" id="dc-zhemo" onclick="toggleCard('zhemo')">
-          <div class="dcard-bg" style="background-image:url('者磨山.webp')"></div>
+          <div class="dcard-bg" data-bg="者磨山.webp"></div>
           <div class="dcard-content">
           <div class="dcard-header">
             <div class="dcard-left">
