@@ -641,8 +641,9 @@
         '大理背景图.webp',
         '丽江背景图.webp',
       ];
+      // 总任务：3张图 + 1个音乐文件
       let loaded = 0;
-      const total = images.length;
+      const total = images.length + 1;
       const bar = document.getElementById('loading-bar');
       const pct = document.getElementById('loading-pct');
       const sub = document.getElementById('loading-sub');
@@ -669,6 +670,21 @@
         img.onload = img.onerror = onLoad;
         img.src = src;
       });
+
+      // 音乐加载检测
+      const audio = document.getElementById('bg-music');
+      if (audio) {
+        audio.addEventListener('canplaythrough', onLoad, { once: true });
+        audio.addEventListener('error', onLoad, { once: true });
+        // 部分浏览器不会触发 canplaythrough（如静音模式），超时兜底
+        setTimeout(() => {
+          if (loaded < total) onLoad();
+        }, 5000);
+        audio.load();
+      } else {
+        // audio 元素不存在时直接跳过
+        onLoad();
+      }
     })();
   </script>
   <div class="page" id="page-kunming">
@@ -2026,7 +2042,7 @@
   <div id="music-btn" onclick="toggleMusic()" title="Espresso (On Vacation Version) - Sabrina Carpenter">
     <div id="music-disc">🎵</div>
   </div>
-  <audio id="bg-music" loop preload="none">
+  <audio id="bg-music" loop preload="auto">
     <source src="Sabrina Carpenter - Espresso (On Vacation Version)_L.mp3" type="audio/mpeg">
   </audio>
 
