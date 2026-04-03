@@ -323,7 +323,9 @@
     }
 
     /* ===== 二选一页 ===== */
-    #page-choose {
+    #page-choose,
+    #page-next-from-dali,
+    #page-next-from-lijiang {
       flex-direction: row;
       align-items: stretch;
       overflow: hidden;
@@ -346,13 +348,19 @@
     .side .bg { transition: transform 0.5s ease; }
     .side:active .bg { transform: scale(1.05); }
 
-    #page-choose.active .side-dali {
+    #page-choose.active .side-dali,
+    #page-next-from-dali.active .side-dali,
+    #page-next-from-lijiang.active .side-dali {
       animation: slideUp 0.5s ease 0.08s forwards;
     }
-    #page-choose.active .side-lijiang {
+    #page-choose.active .side-lijiang,
+    #page-next-from-dali.active .side-lijiang,
+    #page-next-from-lijiang.active .side-lijiang {
       animation: slideUp 0.5s ease 0.22s forwards;
     }
-    #page-choose.active .vs-badge {
+    #page-choose.active .vs-badge,
+    #page-next-from-dali.active .vs-badge,
+    #page-next-from-lijiang.active .vs-badge {
       animation: popIn 0.38s ease 0.36s both;
     }
     @keyframes slideUp {
@@ -842,6 +850,8 @@
       document.getElementById(id).classList.add('active');
     }
 
+    let shangriFrom = null; // 记录是从大理还是丽江进入香格里拉
+
     function goBack(from) {
       if (from === 'page-choose') {
         showPage('page-kunming');
@@ -849,6 +859,12 @@
         showPage('page-choose');
       } else if (from === 'page-lijiang') {
         showPage('page-choose');
+      } else if (from === 'page-next-from-dali') {
+        showPage('page-dali');
+      } else if (from === 'page-next-from-lijiang') {
+        showPage('page-lijiang');
+      } else if (from === 'page-shangri') {
+        showPage(shangriFrom === 'lijiang' ? 'page-next-from-lijiang' : 'page-next-from-dali');
       }
     }
 
@@ -1124,7 +1140,7 @@
     }
 
     function confirmDali() {
-      alert('行程已确认！\n（后续结果页待开发）');
+      showPage('page-next-from-dali');
     }
 
     // ===== 丽江内页逻辑 =====
@@ -1294,7 +1310,7 @@
     }
 
     function confirmLijiang() {
-      alert('行程已确认！\n（后续结果页待开发）');
+      showPage('page-next-from-lijiang');
     }
 
     function chooseLijiang() {
@@ -1305,6 +1321,82 @@
         });
       }
       showPage('page-lijiang');
+    }
+
+    let sgImgsLoaded = false;
+    function chooseShangri(from) {
+      shangriFrom = from;
+      if (!sgImgsLoaded) {
+        sgImgsLoaded = true;
+        document.querySelectorAll('.sgcard-bg[data-bg]').forEach(el => {
+          el.style.backgroundImage = "url('" + el.dataset.bg + "')";
+        });
+      }
+      showPage('page-shangri');
+    }
+
+    // ===== 香格里拉内页逻辑 =====
+    let sgManualSelected = new Set();
+
+    function sgSetCheck(id, state) {
+      const el = document.getElementById('sgchk-' + id);
+      if (!el) return;
+      if (state === 'on') { el.classList.add('checked'); el.classList.remove('green-check'); el.textContent = '✓'; }
+      else { el.classList.remove('checked','green-check'); el.textContent = ''; }
+    }
+    function sgSetCardSelected(id, on) {
+      const el = document.getElementById('sgc-' + id);
+      if (el) el.classList.toggle('selected', on);
+    }
+
+    function sgToggleCard(id) {
+      if (sgManualSelected.has(id)) {
+        sgManualSelected.delete(id);
+        sgSetCardSelected(id, false);
+        sgSetCheck(id, 'off');
+      } else {
+        if (sgManualSelected.size >= 2) {
+          alert('最多可选 2 个项目');
+          return;
+        }
+        sgManualSelected.add(id);
+        sgSetCardSelected(id, true);
+        sgSetCheck(id, 'on');
+      }
+      sgUpdateFooter();
+    }
+
+    function sgUpdateFooter() {
+      const total = sgManualSelected.size;
+      document.getElementById('sgsel-count').textContent = total;
+      const btn = document.getElementById('sgfooter-btn');
+      const summary = document.getElementById('sgfooter-summary');
+      const priceEl = document.getElementById('sgfooter-price');
+      const labelMap = {
+        napa:'🛵 纳帕海小电驴', pudacuo:'🌲 普达措国家森林公园',
+        dukzong:'🏯 独克宗古城', abujicuo:'🥾 阿布吉措徒步'
+      };
+      const prices = { napa:[60,60], pudacuo:[190,190], dukzong:[0,0], abujicuo:[300,300] };
+      if (total === 0) {
+        summary.textContent = '请选择你的行程项目';
+        priceEl.textContent = '';
+        btn.classList.remove('ready');
+        return;
+      }
+      const labels = [];
+      let min=0, max=0;
+      sgManualSelected.forEach(id => {
+        if (labelMap[id]) labels.push(labelMap[id]);
+        const p = prices[id];
+        if (p) { min+=p[0]; max+=p[1]; }
+      });
+      summary.textContent = labels.join(' · ');
+      priceEl.textContent = min===0 ? '' : (min===max ? `预估费用：¥${min}/人` : `预估费用：¥${min}～¥${max}/人`);
+      btn.classList.add('ready');
+    }
+
+    function confirmShangri() {
+      alert('行程已确认！');
     }
   </script>
   <!-- ==============================
@@ -2033,6 +2125,209 @@
           <div class="footer-price" id="lfooter-price"></div>
         </div>
         <button class="footer-btn" id="lfooter-btn" onclick="confirmLijiang()">确认行程 →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==============================
+       大理确认后：丽江 or 香格里拉
+  ============================== -->
+  <div class="page" id="page-next-from-dali">
+    <button class="back-btn" onclick="goBack('page-next-from-dali')">‹ 返回大理</button>
+
+    <!-- 丽江 -->
+    <div class="side side-dali" onclick="chooseLijiang()">
+      <div class="bg" style="background-image:url('丽江背景图.webp'); background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="spots-wrap">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">玉龙雪山山脚骑行</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">虎跳峡高路徒步</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🏔️</span><span class="spot-text">干河坝秘境徒步</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🌸</span><span class="spot-text">老药山高山杜鹃</span></div>
+        </div>
+      </div>
+      <div class="side-inner">
+        <div class="side-tag">LIJIANG</div>
+        <div class="side-name">丽江</div>
+        <div class="side-desc">雪山、古镇、峡谷与纳西风情并存，适合高原骑行与深度徒步。</div>
+        <div class="side-cta">去丽江 →</div>
+      </div>
+    </div>
+
+    <div class="vs-badge">VS</div>
+
+    <!-- 香格里拉 -->
+    <div class="side side-lijiang" onclick="chooseShangri('dali')">
+      <div class="bg" style="background-image:url('香格里拉背景图.webp'); background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="spots-wrap">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🛵</span><span class="spot-text">纳帕海小电驴</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🌲</span><span class="spot-text">普达措国家森林公园</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🏯</span><span class="spot-text">独克宗古城</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">阿布吉措徒步（24km）</span></div>
+        </div>
+      </div>
+      <div class="side-inner">
+        <div class="side-tag">SHANGRI-LA</div>
+        <div class="side-name">香格里拉</div>
+        <div class="side-desc">藏式风情、高原草甸与秘境徒步，是云南之旅的终极升华之地。</div>
+        <div class="side-cta">去香格里拉 →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       丽江确认后：大理 or 香格里拉
+  ============================== -->
+  <div class="page" id="page-next-from-lijiang">
+    <button class="back-btn" onclick="goBack('page-next-from-lijiang')">‹ 返回丽江</button>
+
+    <!-- 大理 -->
+    <div class="side side-dali" onclick="chooseDali()">
+      <div class="bg" style="background-image:url('大理背景图.webp'); background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="spots-wrap">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🚴</span><span class="spot-text">洱海骑行</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">苍山玉带路徒步</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🌄</span><span class="spot-text">者摩山蓝调</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🏘️</span><span class="spot-text">沙溪古镇</span></div>
+        </div>
+      </div>
+      <div class="side-inner">
+        <div class="side-tag">DALI</div>
+        <div class="side-name">大理</div>
+        <div class="side-desc">洱海、苍山、古城与白族风情兼具，适合骑行、徒步和慢节奏风景线旅行。</div>
+        <div class="side-cta">去大理 →</div>
+      </div>
+    </div>
+
+    <div class="vs-badge">VS</div>
+
+    <!-- 香格里拉 -->
+    <div class="side side-lijiang" onclick="chooseShangri('lijiang')">
+      <div class="bg" style="background-image:url('香格里拉背景图.webp'); background-size:cover; background-position:center;"></div>
+      <div class="side-shade"></div>
+      <div class="spots-wrap">
+        <div class="spots">
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🛵</span><span class="spot-text">纳帕海小电驴</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🌲</span><span class="spot-text">普达措国家森林公园</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🏯</span><span class="spot-text">独克宗古城</span></div>
+          <div class="spot"><span class="dot"></span><span class="spot-emoji">🥾</span><span class="spot-text">阿布吉措徒步（24km）</span></div>
+        </div>
+      </div>
+      <div class="side-inner">
+        <div class="side-tag">SHANGRI-LA</div>
+        <div class="side-name">香格里拉</div>
+        <div class="side-desc">藏式风情、高原草甸与秘境徒步，是云南之旅的终极升华之地。</div>
+        <div class="side-cta">去香格里拉 →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       香格里拉内页
+  ============================== -->
+  <div class="page" id="page-shangri">
+    <div class="dali-page">
+
+      <div class="dali-nav">
+        <button class="back-btn" onclick="goBack('page-shangri')">‹ 返回</button>
+        <div class="dali-nav-title">香格里拉 · 选择行程</div>
+        <div class="dali-selection-count"><span id="sgsel-count">0</span>/2 已选</div>
+      </div>
+
+      <div class="dali-hint">最多可选 <b>2</b> 个项目</div>
+
+      <div class="dali-cards" id="shangri-cards">
+
+        <!-- 1. 纳帕海小电驴 -->
+        <div class="dcard" id="sgc-napa" onclick="sgToggleCard('napa')">
+          <div class="sgcard-bg dcard-bg" data-bg="纳帕海.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🛵 纳帕海小电驴</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">0.5天</span>
+                <span class="price-tag">¥60/人</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="sgchk-napa"></div>
+          </div>
+          <div class="dcard-desc">纳帕海是香格里拉坝子中最大的高原湿地，海拔3266m，冬季大量黑颈鹤等候鸟栖居，夏秋草甸碧绿如茵。骑电驴沿湖环行，远处雪山倒映水中，视野极其开阔，是香格里拉最轻松惬意的半日游法。路程平坦，老少皆宜。</div>
+          </div>
+        </div>
+
+        <!-- 2. 普达措 -->
+        <div class="dcard" id="sgc-pudacuo" onclick="sgToggleCard('pudacuo')">
+          <div class="sgcard-bg dcard-bg" data-bg="普达措.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🌲 普达措国家森林公园</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 3.0</span>
+                <span class="meta-tag">0.5天</span>
+                <span class="price-tag">¥190/人（门票+接驳）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="sgchk-pudacuo"></div>
+          </div>
+          <div class="dcard-desc">中国第一个国家公园，由碧塔海和属都湖两个高原湖泊组成，海拔3500-4159m，林密湖碧、牧场广阔。园内以电瓶接驳车游览，步行栈道沿湖而建，景色清幽。缺点是近年商业化程度上升、人流较多，旺季排队明显；若有高反需谨慎安排。</div>
+          </div>
+        </div>
+
+        <!-- 3. 独克宗古城 -->
+        <div class="dcard" id="sgc-dukzong" onclick="sgToggleCard('dukzong')">
+          <div class="sgcard-bg dcard-bg" data-bg="独克宗古城.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🏯 独克宗古城</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 3.5</span>
+                <span class="meta-tag">不限</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="sgchk-dukzong"></div>
+          </div>
+          <div class="dcard-desc">中国保存最完好的藏式古城之一，意为"月光城"。青石板街道、白墙藏楼、转经筒随处可见，藏式风情浓郁。必去龟山公园登高俯瞰全城，山顶矗立着世界上最大的转经筒（大金钟），可俯瞰古城全貌与远处雪山。夜晚广场藏舞热闹，适合傍晚漫步。</div>
+          </div>
+        </div>
+
+        <!-- 4. 阿布吉措 -->
+        <div class="dcard" id="sgc-abujicuo" onclick="sgToggleCard('abujicuo')">
+          <div class="sgcard-bg dcard-bg" data-bg="阿布吉措.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🥾 阿布吉措徒步</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 5.0</span>
+                <span class="meta-tag">1天</span>
+                <span class="price-tag">¥300/人（包车+向导）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="sgchk-abujicuo"></div>
+          </div>
+          <div class="dcard-desc">香格里拉最顶级的秘境徒步路线，全程约24km。新开辟的穿越线路将高山牧场、圣湖、雪山与原始森林串联成一条绝美画廊，沿途几乎无人，保留着极度原始的高原风貌。终点阿布吉措圣湖静卧于雪山脚下，湛蓝剔透。体力要求高，需专业向导带领，是整个云南行程中徒步档次最高的一条路线。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 底部确认栏 -->
+      <div class="dali-footer" id="shangri-footer">
+        <div class="footer-left">
+          <div class="footer-summary" id="sgfooter-summary">请选择你的行程项目</div>
+          <div class="footer-price" id="sgfooter-price"></div>
+        </div>
+        <button class="footer-btn" id="sgfooter-btn" onclick="confirmShangri()">确认行程 →</button>
       </div>
 
     </div>
