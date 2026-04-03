@@ -831,6 +831,8 @@
         showPage('page-kunming');
       } else if (from === 'page-dali') {
         showPage('page-choose');
+      } else if (from === 'page-lijiang') {
+        showPage('page-choose');
       }
     }
 
@@ -1109,8 +1111,184 @@
       alert('行程已确认！\n（后续结果页待开发）');
     }
 
+    // ===== 丽江内页逻辑 =====
+    let lijImgsLoaded = false;
+    let lBikeSelected = false;
+    let lBikeRoute = null; // 'leisure' | 'snow'
+    const L_EXCL = {}; // 暂无互斥
+    let lAutoSelected  = new Set();
+    let lManualSelected = new Set();
+
+    function getLManualMax() { return lBikeSelected ? 2 : 3; }
+
+    function lSetCheck(id, state) {
+      const el = document.getElementById('lchk-' + id);
+      if (!el) return;
+      if (state === 'on')        { el.classList.add('checked'); el.classList.remove('green-check'); el.textContent = '✓'; }
+      else if (state === 'auto') { el.classList.remove('checked'); el.classList.add('green-check'); el.textContent = '✓'; }
+      else                       { el.classList.remove('checked','green-check'); el.textContent = ''; }
+    }
+    function lSetCardSelected(id, on) {
+      const el = document.getElementById('lc-' + id);
+      if (el) el.classList.toggle('selected', on);
+    }
+
+    // 自动选中项随路线变化
+    const L_AUTO_LEISURE = ['baisha','lashi','shuhe','oldtown_lj']; // 休闲骑
+    const L_AUTO_SNOW    = ['baisha','oldtown_lj','yulong'];         // 缓坡雪山骑
+
+    function lSetAutoItems(items, on) {
+      items.forEach(id => {
+        const card = document.getElementById('lc-' + id);
+        const autoTag = document.getElementById('lauto-tag-' + id);
+        if (!card) return;
+        if (on) {
+          lAutoSelected.add(id);
+          lManualSelected.delete(id);
+          lSetCardSelected(id, true);
+          lSetCheck(id, 'auto');
+          card.style.pointerEvents = 'none';
+          if (autoTag) autoTag.style.display = '';
+        } else {
+          lAutoSelected.delete(id);
+          lSetCardSelected(id, false);
+          lSetCheck(id, 'off');
+          card.style.pointerEvents = '';
+          if (autoTag) autoTag.style.display = 'none';
+        }
+      });
+    }
+
+    function lApplyRoute(route) {
+      // 先清除之前所有自动项
+      lSetAutoItems([...L_AUTO_LEISURE, ...L_AUTO_SNOW], false);
+      if (route === 'leisure') lSetAutoItems(L_AUTO_LEISURE, true);
+      else if (route === 'snow') lSetAutoItems(L_AUTO_SNOW, true);
+      // 超额修剪
+      while (lManualSelected.size > getLManualMax()) {
+        const rm = [...lManualSelected].pop();
+        lManualSelected.delete(rm);
+        lSetCardSelected(rm, false);
+        lSetCheck(rm, 'off');
+      }
+    }
+
+    function lToggleBike() {
+      lBikeSelected = !lBikeSelected;
+      const card = document.getElementById('lc-bike');
+      const opts = document.getElementById('lbike-opts');
+      if (lBikeSelected) {
+        card.classList.add('selected');
+        lSetCheck('bike', 'on');
+        opts.classList.add('open');
+        if (lBikeRoute) lApplyRoute(lBikeRoute);
+        while (lManualSelected.size > getLManualMax()) {
+          const rm = [...lManualSelected].pop();
+          lManualSelected.delete(rm);
+          lSetCardSelected(rm, false);
+          lSetCheck(rm, 'off');
+        }
+      } else {
+        lBikeRoute = null;
+        card.classList.remove('selected');
+        lSetCheck('bike', 'off');
+        opts.classList.remove('open');
+        document.querySelectorAll('.lbike-opt').forEach(o => o.classList.remove('selected'));
+        lSetAutoItems([...L_AUTO_LEISURE, ...L_AUTO_SNOW], false);
+      }
+      lUpdateFooter();
+    }
+
+    function lSelectRoute(route, e) {
+      e.stopPropagation();
+      if (!lBikeSelected) return;
+      lBikeRoute = route;
+      document.getElementById('lopt-leisure').classList.toggle('selected', route === 'leisure');
+      document.getElementById('lopt-snow').classList.toggle('selected', route === 'snow');
+      lApplyRoute(route);
+      lUpdateFooter();
+    }
+
+    function lToggleCard(id) {
+      if (lAutoSelected.has(id)) return;
+      if (lManualSelected.has(id)) {
+        lManualSelected.delete(id);
+        lSetCardSelected(id, false);
+        lSetCheck(id, 'off');
+      } else {
+        if (lManualSelected.size >= getLManualMax()) {
+          alert(lBikeSelected ? `骑行已含自动项，还可手选 ${getLManualMax()} 个` : `最多可选 ${getLManualMax()} 个项目`);
+          return;
+        }
+        lManualSelected.add(id);
+        lSetCardSelected(id, true);
+        lSetCheck(id, 'on');
+      }
+      lUpdateFooter();
+    }
+
+    function lUpdateFooter() {
+      const allSel = new Set([...lAutoSelected, ...lManualSelected]);
+      const total = (lBikeSelected ? 1 : 0) + allSel.size;
+      document.getElementById('lsel-count').textContent = total;
+
+      const btn = document.getElementById('lfooter-btn');
+      const summary = document.getElementById('lfooter-summary');
+      const priceEl = document.getElementById('lfooter-price');
+
+      const labelMap = {
+        oldtown_lj:'🏯 丽江古城', baisha:'🌿 白沙古镇', shuhe:'🌊 束河古镇',
+        lashi:'🦅 拉市海', yulong:'🏔️ 玉龙雪山',
+        hutiao:'🥾 虎跳峡', ganhaizi:'🏔️ 干涸坝', laoyao:'🌸 老药山'
+      };
+
+      if (total === 0) {
+        summary.textContent = '请选择你的行程项目';
+        priceEl.textContent = '';
+        btn.classList.remove('ready');
+        return;
+      }
+
+      const labels = [];
+      if (lBikeSelected) labels.push(`🚴 骑行（${lBikeRoute === 'leisure' ? '休闲骑' : lBikeRoute === 'snow' ? '缓坡雪山骑' : '未选路线'}）`);
+      allSel.forEach(id => { if (labelMap[id]) labels.push(labelMap[id]); });
+      summary.textContent = labels.join(' · ');
+
+      // 费用
+      const prices = {
+        bike: [150,150], oldtown_lj:[0,0], baisha:[0,0], shuhe:[0,0],
+        lashi:[60,60], yulong:[440,640], // 进山费105+索道费用
+        hutiao:[100,100], ganhaizi:[200,200], laoyao:[200,200]
+      };
+      let min=0, max=0;
+      if (lBikeSelected) { min+=150; max+=150; }
+      allSel.forEach(id => {
+        // 骑行时古城/白沙/束河/拉市海/玉龙免单独计算（骑行含交通）
+        if (lBikeSelected && ['oldtown_lj','baisha','shuhe','lashi'].includes(id)) return;
+        const p = prices[id];
+        if (p) { min+=p[0]; max+=p[1]; }
+      });
+
+      if (min===0)      priceEl.textContent = '';
+      else if (min===max) priceEl.textContent = `预估费用：¥${min}/人`;
+      else              priceEl.textContent = `预估费用：¥${min}～¥${max}/人`;
+
+      const ready = total>0 && (!lBikeSelected || lBikeRoute!==null);
+      btn.classList.toggle('ready', ready);
+    }
+
+    function confirmLijiang() {
+      alert('行程已确认！\n（后续结果页待开发）');
+    }
+
     function chooseLijiang() {
-      alert('你选择了丽江！\n（丽江行程页待开发）');
+      if (!lijImgsLoaded) {
+        lijImgsLoaded = true;
+        document.querySelectorAll('.lcard-bg[data-bg]').forEach(el => {
+          el.style.backgroundImage = "url('" + el.dataset.bg + "')";
+        });
+      }
+      showPage('page-lijiang');
     }
   </script>
   <!-- ==============================
@@ -1625,6 +1803,224 @@
       pointer-events: all;
     }
   </style>
+
+  <!-- ==============================
+       丽江内页
+  ============================== -->
+  <div class="page" id="page-lijiang">
+    <div class="dali-page">
+
+      <div class="dali-nav">
+        <button class="back-btn" onclick="goBack('page-lijiang')">‹ 返回</button>
+        <div class="dali-nav-title">丽江 · 选择行程</div>
+        <div class="dali-selection-count"><span id="lsel-count">0</span>/3 已选</div>
+      </div>
+
+      <div class="dali-hint">最多可选 <b>3</b> 个项目（带 <span class="auto-tag">自动</span> 的会随骑行路线同步）</div>
+
+      <div class="dali-cards" id="lijiang-cards">
+
+        <!-- 1. 骑行 -->
+        <div class="dcard" id="lc-bike" onclick="lToggleBike()">
+          <div class="lcard-bg dcard-bg" data-bg="丽江骑行.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🚴 骑行·玉龙雪山山脚</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 5.0</span>
+                <span class="meta-tag">1天</span>
+                <span class="price-tag">¥150/人</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-bike"></div>
+          </div>
+          <div class="bike-options" id="lbike-opts">
+            <div class="lbike-opt bike-opt" id="lopt-leisure" onclick="lSelectRoute('leisure',event)">
+              <div class="bike-opt-top">
+                <span class="bike-opt-name">🌿 休闲骑</span>
+                <span class="bike-opt-price">约 ¥150/人</span>
+              </div>
+              <div class="bike-opt-desc">古城 → 拉市海 → 束河 → 白沙 → 古城（约40km）。边骑边逛，串联拉市海湿地、束河古镇、白沙古镇、古城狮子山，一路雪山相伴，节奏轻松适合所有骑行水平。<br><b>自动选中：丽江古城 + 拉市海 + 束河古镇 + 白沙古镇</b></div>
+            </div>
+            <div class="lbike-opt bike-opt" id="lopt-snow" onclick="lSelectRoute('snow',event)">
+              <div class="bike-opt-top">
+                <span class="bike-opt-name">🏔️ 缓坡雪山骑</span>
+                <span class="bike-opt-price">约 ¥150/人 + 景区费</span>
+              </div>
+              <div class="bike-opt-desc">古城 → 白沙 → 甘海子 → 蓝月谷 → 古城（约50km，25km缓坡爬升+25km下坡）。沿旅游公路顺坡骑向玉龙雪山景区，途经大经幡、甘海子草甸、蓝月谷，是环玉龙最精华段，终点即为景区门口。<br><b>⚠️ 需额外支付玉龙雪山景区进山费</b><br><b>自动选中：丽江古城 + 白沙古镇 + 玉龙雪山</b></div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- 2. 丽江古城 -->
+        <div class="dcard" id="lc-oldtown_lj" onclick="lToggleCard('oldtown_lj')">
+          <div class="lcard-bg dcard-bg" data-bg="丽江古城.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🏯 丽江古城</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 3.5</span>
+                <span class="meta-tag">不限</span>
+                <span class="auto-tag" id="lauto-tag-oldtown_lj" style="display:none">自动</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-oldtown_lj"></div>
+          </div>
+          <div class="dcard-desc">世界文化遗产，以大水车、四方街、狮子山为标志性打卡点。依山而建的地形让古城颇具层次感，登上狮子山俯瞰全城与雪山是经典视角。缺点是商业化严重、夜晚喧嚣，旺季人流极大，白天可逛完主要景点。</div>
+          </div>
+        </div>
+
+        <!-- 3. 白沙古镇 -->
+        <div class="dcard" id="lc-baisha" onclick="lToggleCard('baisha')">
+          <div class="lcard-bg dcard-bg" data-bg="白沙古镇.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🌿 白沙古镇</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.5</span>
+                <span class="meta-tag">不限</span>
+                <span class="auto-tag" id="lauto-tag-baisha" style="display:none">自动</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-baisha"></div>
+          </div>
+          <div class="dcard-desc">丽江古城以北约10km，纳西族文化保留最完整的小镇，比古城安静数倍。打卡经典众多：白沙壁画（明代珍品）、丽江大经幡（号称世界最大），独立咖啡馆氛围绝佳，且离玉龙雪山极近，可直接望见雪山全貌。</div>
+          </div>
+        </div>
+
+        <!-- 4. 束河古镇 -->
+        <div class="dcard" id="lc-shuhe" onclick="lToggleCard('shuhe')">
+          <div class="lcard-bg dcard-bg" data-bg="束河古镇.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🌊 束河古镇</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">不限</span>
+                <span class="auto-tag" id="lauto-tag-shuhe" style="display:none">自动</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-shuhe"></div>
+          </div>
+          <div class="dcard-desc">位于丽江古城西北4km，是纳西族茶马古道上的重要驿站，氛围比古城慵懒许多。流水穿街、青石板路，临水的咖啡馆和客栈颇受文艺青年喜爱，适合放慢脚步消磨半天。</div>
+          </div>
+        </div>
+
+        <!-- 5. 拉市海 -->
+        <div class="dcard" id="lc-lashi" onclick="lToggleCard('lashi')">
+          <div class="lcard-bg dcard-bg" data-bg="拉市海.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🦅 拉市海</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">半天</span>
+                <span class="price-tag">¥60/人（马术/划船）</span>
+                <span class="auto-tag" id="lauto-tag-lashi" style="display:none">自动</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-lashi"></div>
+          </div>
+          <div class="dcard-desc">云南最大的高原季节性湿地，每年冬候鸟迁徙聚集。可骑马环湖或划木筏，湖面平静，背景是玉龙雪山，景色极具画面感。距丽江古城约20km，通常与骑行或顺路游览结合。</div>
+          </div>
+        </div>
+
+        <!-- 6. 玉龙雪山 -->
+        <div class="dcard" id="lc-yulong" onclick="lToggleCard('yulong')">
+          <div class="lcard-bg dcard-bg" data-bg="玉龙雪山.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🏔️ 玉龙雪山</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">半天</span>
+                <span class="price-tag">¥105 进山 + 索道另计</span>
+                <span class="auto-tag" id="lauto-tag-yulong" style="display:none">自动</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-yulong"></div>
+          </div>
+          <div class="dcard-desc">丽江标志性景观，海拔5596m，有三条索道可选：大索道（甘海子→4506m，¥335/人）、中索道（云杉坪，¥65/人）、小索道（犁地坪，¥55/人）。进山费¥105/人。大索道景色最震撼，可踏雪近观冰川，但高反风险较大，建议备好红景天；中索道性价比高，森林草甸风光好。<br><b>⚠️ 索道名额紧俏，建议提前1-2天预约</b></div>
+          </div>
+        </div>
+
+        <!-- 7. 虎跳峡 -->
+        <div class="dcard" id="lc-hutiao" onclick="lToggleCard('hutiao')">
+          <div class="lcard-bg dcard-bg" data-bg="虎跳峡.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🥾 虎跳峡高路徒步</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 5.0</span>
+                <span class="meta-tag">1天</span>
+                <span class="price-tag">¥100/人（包车）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-hutiao"></div>
+          </div>
+          <div class="dcard-desc">中国最著名的峡谷徒步线路之一，玉龙雪山与哈巴雪山对峙而立，峡谷深度超3000m，金沙江在谷底轰鸣奔涌。高路全程约25km，需翻越28道拐，沿途俯瞰震撼峡谷全貌，住宿在中途客栈即可一日完成。体力要求中等偏上，经验丰富的徒步者强烈推荐。</div>
+          </div>
+        </div>
+
+        <!-- 8. 干涸坝 -->
+        <div class="dcard" id="lc-ganhaizi" onclick="lToggleCard('ganhaizi')">
+          <div class="lcard-bg dcard-bg" data-bg="干涸坝.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🏔️ 干涸坝徒步</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 5.0</span>
+                <span class="meta-tag">1天</span>
+                <span class="price-tag">¥200/人（向导）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-ganhaizi"></div>
+          </div>
+          <div class="dcard-desc">玉龙雪山背面的隐秘秘境，人迹罕至，景色原始震撼。路线途经蚂蝗坝——一片高原湿地草甸，倒映雪山如镜，是极少人到达的拍摄圣地；终点洛克石以探险家约瑟夫·洛克命名，孤峰耸立于草甸之上，自然原生感极强。需持证向导带领进山，全程体力消耗大。</div>
+          </div>
+        </div>
+
+        <!-- 9. 老药山 -->
+        <div class="dcard" id="lc-laoyao" onclick="lToggleCard('laoyao')">
+          <div class="lcard-bg dcard-bg" data-bg="老药山.webp"></div>
+          <div class="dcard-content">
+          <div class="dcard-header">
+            <div class="dcard-left">
+              <div class="dcard-title">🌸 老药山徒步</div>
+              <div class="dcard-meta">
+                <span class="stars-num">⭐ 4.0</span>
+                <span class="meta-tag">1天</span>
+                <span class="price-tag">¥200/人（向导）</span>
+              </div>
+            </div>
+            <div class="dcard-check" id="lchk-laoyao"></div>
+          </div>
+          <div class="dcard-desc">位于丽江西北，以高山杜鹃花海著称，花期集中在4月下旬至5月下旬，满山红杜鹃铺开时景色极为壮观。<b>五一前后（4月底～5月初）是最佳花期窗口</b>，正好适合五一出行！海拔较高，需向导陪同，体力要求中等。如果是五一假期，老药山是丽江行程中最值得加入的一站。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 底部确认栏 -->
+      <div class="dali-footer" id="lijiang-footer">
+        <div class="footer-left">
+          <div class="footer-summary" id="lfooter-summary">请选择你的行程项目</div>
+          <div class="footer-price" id="lfooter-price"></div>
+        </div>
+        <button class="footer-btn" id="lfooter-btn" onclick="confirmLijiang()">确认行程 →</button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- 音乐播放器 -->
   <div id="music-btn" onclick="toggleMusic()" title="Espresso (On Vacation Version) - Sabrina Carpenter">
