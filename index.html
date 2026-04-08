@@ -848,21 +848,17 @@
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const page = document.getElementById(id);
-      // 重置 .side 动画，防止二选一页第二次显示时因 animation-fill-mode:forwards 停留在 opacity:0
-      page.querySelectorAll('.side').forEach(s => {
-        s.style.animation = 'none';
-        s.style.opacity = '0';
-        s.style.transform = 'translateY(22px)';
-        void s.offsetWidth; // 强制 reflow
-        s.style.animation = '';
-        s.style.opacity = '';
-        s.style.transform = '';
-      });
-      const badge = page.querySelector('.vs-badge');
-      if (badge) {
-        badge.style.animation = 'none';
-        void badge.offsetWidth;
-        badge.style.animation = '';
+      // 中转页的 .side 默认 opacity:0（动画），需要在显示前强制可见
+      if (id === 'page-next-from-dali' || id === 'page-next-from-lijiang') {
+        page.querySelectorAll('.side').forEach(s => {
+          s.style.opacity = '1';
+          s.style.transform = 'translateY(0)';
+        });
+        const badge = page.querySelector('.vs-badge');
+        if (badge) {
+          badge.style.opacity = '1';
+          badge.style.transform = 'translate(-50%,-50%) scale(1)';
+        }
       }
       page.classList.add('active');
     }
