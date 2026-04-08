@@ -348,6 +348,18 @@
     .side .bg { transition: transform 0.5s ease; }
     .side:active .bg { transform: scale(1.05); }
 
+    #page-next-from-dali .side,
+    #page-next-from-lijiang .side {
+      opacity: 1;
+      transform: translateY(0);
+      animation: none !important;
+    }
+    #page-next-from-dali .vs-badge,
+    #page-next-from-lijiang .vs-badge {
+      opacity: 1;
+      transform: translate(-50%,-50%) scale(1);
+      animation: none !important;
+    }
     #page-choose.active .side-dali,
     #page-next-from-dali.active .side-dali,
     #page-next-from-lijiang.active .side-dali {
@@ -847,20 +859,7 @@
 
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      const page = document.getElementById(id);
-      // 中转页的 .side 默认 opacity:0（动画），需要在显示前强制可见
-      if (id === 'page-next-from-dali' || id === 'page-next-from-lijiang') {
-        page.querySelectorAll('.side').forEach(s => {
-          s.style.opacity = '1';
-          s.style.transform = 'translateY(0)';
-        });
-        const badge = page.querySelector('.vs-badge');
-        if (badge) {
-          badge.style.opacity = '1';
-          badge.style.transform = 'translate(-50%,-50%) scale(1)';
-        }
-      }
-      page.classList.add('active');
+      document.getElementById(id).classList.add('active');
     }
 
     let shangriFrom = null; // 记录是从大理还是丽江进入香格里拉
