@@ -847,7 +847,24 @@
 
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
+      const page = document.getElementById(id);
+      // 重置 .side 动画，防止二选一页第二次显示时因 animation-fill-mode:forwards 停留在 opacity:0
+      page.querySelectorAll('.side').forEach(s => {
+        s.style.animation = 'none';
+        s.style.opacity = '0';
+        s.style.transform = 'translateY(22px)';
+        void s.offsetWidth; // 强制 reflow
+        s.style.animation = '';
+        s.style.opacity = '';
+        s.style.transform = '';
+      });
+      const badge = page.querySelector('.vs-badge');
+      if (badge) {
+        badge.style.animation = 'none';
+        void badge.offsetWidth;
+        badge.style.animation = '';
+      }
+      page.classList.add('active');
     }
 
     let shangriFrom = null; // 记录是从大理还是丽江进入香格里拉
